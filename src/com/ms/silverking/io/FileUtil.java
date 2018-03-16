@@ -11,9 +11,14 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+
+import com.google.common.io.Files;
+import com.ms.silverking.log.Log;
 
 
 public class FileUtil {
@@ -21,9 +26,49 @@ public class FileUtil {
 		FileOutputStream	out;
 		
 		out = new FileOutputStream(file);
-		out.write(value);
-		out.close();
+		try {
+			out.write(value);
+		} finally {
+			out.close();
+		}
 	}		
+	
+	public static void writeToFile(File file, byte[] ... values) throws IOException {
+		FileOutputStream	out;
+		
+		out = new FileOutputStream(file);
+		try {
+			for (byte[] value : values) {
+				out.write(value);
+			}
+		} finally {
+			out.close();
+		}
+	}
+	
+	public static void writeToFile(File file, ByteBuffer value) throws IOException {
+		FileOutputStream	out;
+		
+		out = new FileOutputStream(file);
+		try {
+			out.getChannel().write(value);
+		} finally {
+			out.close();
+		}
+	}
+	
+	public static void writeToFile(File file, ByteBuffer ... values) throws IOException {
+		FileOutputStream	out;
+		
+		out = new FileOutputStream(file);
+		try {
+			for (ByteBuffer value : values) {
+				out.getChannel().write(value);
+			}
+		} finally {
+			out.close();
+		}
+	}
 	
 	public static void writeToFile(String fileName, String text) throws IOException {
 		writeToFile(new File(fileName), text);
@@ -76,12 +121,16 @@ public class FileUtil {
 		return buf;
 	}
 	
+	public static String readFileAsString(String file) throws IOException {
+		return readFileAsString(new File(file));
+	}
+	
 	public static String readFileAsString(File file) throws IOException {
 		return new String(readFileAsBytes(file));
 	}
 
     public static void cleanDirectory(File dir) {
-        for(File file : dir.listFiles()) {
+        for (File file : dir.listFiles()) {
             file.delete();
         }
     }
@@ -98,11 +147,72 @@ public class FileUtil {
     	File[]	files;
     	
     	files = path.listFiles();
-    	for (File file : files) {
-    		list.add(file);
-    		if (file.isDirectory()) {
-    			listFilesRecursively(file, list);
-    		}
+    	if (files != null) {
+	    	for (File file : files) {
+	    		list.add(file);
+	    		if (file.isDirectory()) {
+	    			listFilesRecursively(file, list);
+	    		}
+	    	}
     	}
     }
+	
+	public static void copyDirectories(File src, File dest) {
+		if (src.isFile()) {
+			throw new RuntimeException("src needs to a be a directory");
+		}
+		
+		for (File srcFile : src.listFiles()) {
+			File destFile = new File(dest, srcFile.getName());
+			if (srcFile.isDirectory()) {
+				destFile.mkdir();
+				copyDirectories(srcFile, destFile);
+			}
+			else {
+				try {
+					Files.copy(srcFile, destFile);
+				} catch (IOException e) {
+					throw new RuntimeException("couldn't copy " + srcFile + " to " + destFile, e);
+				}
+			}
+		}
+	}
+	
+	public static List<Long> numericFilesInDirAsSortedLongList(File dir) {
+        List<Long> fileNumbers;
+		String[]	files;
+		
+        fileNumbers = new ArrayList<>();
+	    files = dir.list();
+        if (files != null) {
+            for (String file : files) {
+                try {
+                    fileNumbers.add(Long.parseLong(file));
+                } catch (NumberFormatException nfe) {
+                    Log.info("Ignoring non-numeric file: ", file);
+                }
+            }
+            Collections.sort(fileNumbers);
+        }
+        return fileNumbers;
+	}
+	
+	public static List<Integer> numericFilesInDirAsSortedIntegerList(File dir) {
+        List<Integer> fileNumbers;
+		String[]	files;
+		
+        fileNumbers = new ArrayList<>();
+	    files = dir.list();
+        if (files != null) {
+            for (String file : files) {
+                try {
+                    fileNumbers.add(Integer.parseInt(file));
+                } catch (NumberFormatException nfe) {
+                    Log.info("Ignoring non-numeric file: ", file);
+                }
+            }
+            Collections.sort(fileNumbers);
+        }
+        return fileNumbers;
+	}
 }
