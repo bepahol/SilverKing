@@ -375,7 +375,7 @@ public class TwoLevelParallelSSHMaster extends UnicastRemoteObject implements SS
         }
         Log.warning(CollectionUtil.toString(hostList));
         return hostList;
-    }    public static List<String> readHostsFileSelectHostgroup(String vaDhtFile, String hostGroup) throws IOException {        List<String>    hostList;        List<String>    fileLines; //store lines extracted from files 
+    }    public static List<String> readHostsFileSelectHostgroup(String vaDhtFile, String hostGroup) throws IOException {        List<String>    hostList;        List<String>    fileLines; //store lines extracted from files 
         hostList = new ArrayList<>();        fileLines = StreamParser.parseFileLines(vaDhtFile);        for(String aLine : fileLines){            String[] lineFields = aLine.split("\t");  //store split elements of a line             for(int i = 1; i<lineFields.length; i++){                if (hostGroup.equals(lineFields[i])){                    hostList.add(lineFields[0]);                    break;
                                     }            }        }        Log.warning("Hosts: ", hostList.size());        return hostList;    }
     
@@ -407,7 +407,7 @@ public class TwoLevelParallelSSHMaster extends UnicastRemoteObject implements SS
 		} catch (NoSuchObjectException e) {
 			Log.logErrorWarning(e);
 		}
-	}    
+	}    
     /**
      * @param args
      */
